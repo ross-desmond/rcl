@@ -208,6 +208,13 @@ TEST_F(CLASSNAME(TestArgumentsFixture, RMW_IMPLEMENTATION), test_copy_no_args) {
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
   EXPECT_EQ(0, rcl_arguments_get_count_unparsed(&parsed_args));
 
+  // Allocate/deallocate memory to fill with garbage
+  // This will force a potential segfault
+  rcl_allocator_t allocator = rcl_get_default_allocator();
+  void * write_garbage_here = allocator.allocate(sizeof(rcl_arguments_t) * 10u, allocator.state);
+  memset(write_garbage_here, 255, sizeof(rcl_arguments_t) * 10u);
+  allocator.deallocate(write_garbage_here, allocator.state);
+
   rcl_arguments_t copied_args = rcl_get_zero_initialized_arguments();
   ret = rcl_arguments_copy(&parsed_args, &copied_args);
   EXPECT_EQ(RCL_RET_OK, ret) << rcl_get_error_string().str;
